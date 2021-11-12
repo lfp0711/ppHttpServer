@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Net.Mime;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace ppHttpServer
@@ -15,10 +17,18 @@ namespace ppHttpServer
         private String[] _paths = new string[] { };
         private Dictionary<String, String> _users = new Dictionary<string, string>();
 
-        private static volatile bool _keepGoing = true;
-        private static Task _handleTask;
+        private volatile bool _keepGoing = true;
+        private Task _handleTask;
+
+        private Func<HttpListenerRequest, HttpListenerResponse, String, byte[]> _handleRequest;
+
+        private Action<String> _logger;
 
         private HttpListener _listener;
+
+        public Func<HttpListenerRequest, HttpListenerResponse, string, byte[]> HandleRequest { get => _handleRequest; set => _handleRequest = value; }
+        public Action<string> Logger { get => _logger; set => _logger = value; }
+
         public HttpServer() : this(DEFAULT_PORT) { }
 
         public HttpServer(int port) : this(port, null) { }
@@ -36,9 +46,11 @@ namespace ppHttpServer
             Init();
         }
 
+
+
         private void Init()
         {
-            Debug.Print("Init Begin");
+            _log("Init Begin");
             _listener = new HttpListener();
 
             List<string> prefixList = new List<string>();
@@ -65,29 +77,35 @@ namespace ppHttpServer
             }
             prefixList.ForEach(delegate (string prefix)
             {
-                Debug.Print(prefix);
+                _log(prefix);
                 _listener.Prefixes.Add(prefix);
             });
 
             if (_users.Count > 0)
                 _listener.AuthenticationSchemes = AuthenticationSchemes.Basic;
 
-            Debug.Print("Init End");
+            _handleRequest = demoHandleRequest;
+            _logger = log2Debug;
+
+            _log("Init End");
         }
+
+
 
         public void Start()
         {
+            _log("Start HttpServer");
             if (_handleTask != null && !_handleTask.IsCompleted) return; //Already started
             _handleTask = HandleTask();
         }
 
         private async Task HandleTask()
         {
-            Debug.Print("HandleTask Started");
+            _log("HandleTask Started");
             try
             {
                 _listener.Start();
-                Debug.Print("HttpServer - started. Will listen on port " + _port);
+                _log("HttpServer - started. Will listen on port " + _port);
 
                 while (_keepGoing)
                 {
@@ -96,66 +114,68 @@ namespace ppHttpServer
                         var context = await _listener.GetContextAsync();
                         lock (_listener)
                         {
-                            Debug.Print("_listener");
                             if (_keepGoing) OnRequest(context);
                         }
                     }
                     catch (Exception ex)
                     {
-                        Debug.Print("" + ex);
+                        //_log("" + ex);
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.Print("" + ex);
+                _log("" + ex);
             }
         }
         public void Stop()
         {
+            _log("Stop HttpServer");
             _keepGoing = false;
-            lock (_listener)
-            {
-                //Use a lock so we don't kill a request that's currently being processed
-                _listener.Stop();
-            }
             try
             {
+                lock (_listener)
+                {
+                    _listener.Stop();
+                }
                 _handleTask.Wait();
             }
-            catch { /* je ne care pas */ }
+            catch (Exception ex)
+            {
+                _log("" + ex);
+            }
         }
 
         private void OnRequest(HttpListenerContext context)
         {
             HttpListenerRequest request = context.Request;
             HttpListenerResponse response = context.Response;
-            Debug.Print("OnRequest: " + request.RemoteEndPoint.Address + " " + request.HttpMethod + " " + request.Url + "");
 
-            if (auth(context) == null)
+            String method = request.HttpMethod;
+            Uri url = request.Url;
+            String path = url.AbsolutePath;
+            String authUser = auth(context);
+
+            _log("OnRequest: " + (authUser == null ? "-" : authUser) + " " + request.RemoteEndPoint.Address + " " + method + " " + url + "");
+
+            if (_listener.AuthenticationSchemes == AuthenticationSchemes.Basic && authUser == null)
             {
                 response.StatusCode = ((int)HttpStatusCode.Unauthorized);
             }
             else
             {
-                String method = request.HttpMethod;
-                String path = request.Url.AbsolutePath;
-
-                if (path == "/hello")
+                if (HandleRequest != null)
                 {
-                    string responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
-                    byte[] buffer = System.Text.Encoding.UTF8.GetBytes(responseString);
-                    response.ContentLength64 = buffer.Length;
+                    byte[] buffer = HandleRequest(request, response, authUser);
+                    if (buffer != null)
+                    {
+                        // Get a response stream and write the response to it.
+                        response.ContentLength64 = buffer.Length;
+                        Stream output = response.OutputStream;
+                        output.Write(buffer, 0, buffer.Length);
 
-                    Stream output = response.OutputStream;
-                    StreamWriter writer = new StreamWriter(output);
-                    writer.Write(responseString);
-                    // You must close the output stream.
-                    writer.Close();
-                }
-                else
-                {
-                    response.StatusCode = ((int)HttpStatusCode.NotFound);
+                        output.Flush();
+                    }
                 }
             }
 
@@ -164,18 +184,70 @@ namespace ppHttpServer
 
         private String auth(HttpListenerContext context)
         {
-            if (_listener.AuthenticationSchemes == AuthenticationSchemes.Basic)
+            try
             {
-                if (context.User != null)
+                if (_listener.AuthenticationSchemes == AuthenticationSchemes.Basic)
                 {
-                    HttpListenerBasicIdentity identity = (HttpListenerBasicIdentity)context.User.Identity;
+                    if (context.User != null)
+                    {
+                        HttpListenerBasicIdentity identity = (HttpListenerBasicIdentity)context.User.Identity;
 
-                    if (_users.ContainsKey(identity.Name) && _users[identity.Name].Equals(identity.Password))
-                        return identity.Name;
+                        if (_users.ContainsKey(identity.Name) && _users[identity.Name].Equals(identity.Password))
+                            return identity.Name;
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _log("" + ex);
             }
 
             return null;
         }
+
+        private byte[] demoHandleRequest(HttpListenerRequest request, HttpListenerResponse response, String authUser)
+        {
+            String respBody = null;
+
+            String method = request.HttpMethod;
+            Uri url = request.Url;
+            String path = url.AbsolutePath;
+
+            if (path == "/hello")
+            {
+                Encoding encoding = request.ContentEncoding;
+                Stream input = request.InputStream;
+                StreamReader reader = new StreamReader(input, encoding);
+
+                String requestBody = reader.ReadToEnd();
+
+                string responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
+                response.ContentType = MediaTypeNames.Text.Html;
+
+                respBody = responseString;
+
+                encoding = response.ContentEncoding;
+                if (encoding == null)
+                {
+                    encoding = Encoding.UTF8;
+                    response.ContentEncoding = encoding;
+                }
+            }
+
+            byte[] buffer = Encoding.UTF8.GetBytes(respBody);
+
+            return buffer;
+        }
+
+        private void log2Debug(string? message)
+        {
+            Debug.Print(DateTime.UtcNow + " " + message);
+        }
+        private void _log(string? message)
+        {
+            if (_logger != null)
+                _logger(message);
+        }
+
     }
 }

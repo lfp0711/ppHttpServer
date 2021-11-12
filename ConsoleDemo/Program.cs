@@ -10,11 +10,13 @@ namespace ppHttpServer
 
             Dictionary<String, String> _users = new Dictionary<string, string>();
             _users.Add("bit", "123456");
-            HttpServer httpServer = new HttpServer(8088, new string[] { "hello" }, _users);
+            HttpServer httpServer = new HttpServer(8080, new string[] { "hello" }, _users);
 
             httpServer.Start();
 
             Console.ReadLine();
+
+            httpServer.Stop();
         }
     }
 }
