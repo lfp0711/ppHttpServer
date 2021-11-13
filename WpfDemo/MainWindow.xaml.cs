@@ -68,8 +68,6 @@ namespace WpfDemo
             }
         }
 
-
-
         private byte[] myHandleRequest(HttpListenerRequest request, HttpListenerResponse response, String authUser)
         {
             log2Text("myHandleRequest");
@@ -90,7 +88,7 @@ namespace WpfDemo
                 String responseString = "<HTML><BODY> Hello world!</BODY></HTML>";
                 if (name != null)
                 {
-                    responseString = "<HTML><BODY> Hello " + name + "! </BODY></HTML>";
+                    responseString = "<HTML><BODY> Hello " + name + "! <br>Date time: " + DateTime.UtcNow + " </BODY></HTML>";
                 }
 
                 response.ContentType = MediaTypeNames.Text.Html;
@@ -112,7 +110,10 @@ namespace WpfDemo
 
         private void log2Text(string? message)
         {
-            LogTextBlock.Text += DateTime.UtcNow + " " + message + Environment.NewLine;
+            LogTextBlock.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LogTextBlock.Text += DateTime.UtcNow + " " + message + Environment.NewLine;
+            }));
         }
     }
 }

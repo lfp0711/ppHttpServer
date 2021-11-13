@@ -90,61 +90,47 @@ namespace ppHttpServer
             _log("Init End");
         }
 
-
-
         public void Start()
         {
             _log("Start HttpServer");
-            if (_handleTask != null && !_handleTask.IsCompleted) return; //Already started
-            _handleTask = HandleTask();
+            _listener.Start();
+            BeginGetContext();
         }
 
-        private async Task HandleTask()
-        {
-            _log("HandleTask Started");
-            try
-            {
-                _listener.Start();
-                _log("HttpServer - started. Will listen on port " + _port);
-
-                while (_keepGoing)
-                {
-                    try
-                    {
-                        var context = await _listener.GetContextAsync();
-                        lock (_listener)
-                        {
-                            if (_keepGoing) OnRequest(context);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        //_log("" + ex);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _log("" + ex);
-            }
-        }
         public void Stop()
         {
             _log("Stop HttpServer");
-            _keepGoing = false;
-            try
+            _listener.Stop();
+        }
+
+        private void BeginGetContext()
+        {
+            if (_listener != null && _listener.IsListening)
             {
-                lock (_listener)
-                {
-                    _listener.Stop();
-                }
-                _handleTask.Wait();
-            }
-            catch (Exception ex)
-            {
-                _log("" + ex);
+                _listener.BeginGetContext(GetContextCallback, _listener);
             }
         }
+
+        private void GetContextCallback(IAsyncResult asyncResult)
+        {
+            HttpListenerContext context = null;
+            try
+            {
+                context = _listener.EndGetContext(asyncResult);
+
+                OnRequest(context);
+            }
+            catch
+            {
+                //_log("" + e);
+            }
+            finally
+            {
+                BeginGetContext();
+            }
+
+        }
+
 
         private void OnRequest(HttpListenerContext context)
         {

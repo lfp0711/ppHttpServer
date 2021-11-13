@@ -16,8 +16,10 @@
             <Button Content="Stop" Name="Stop" Margin="5" Click="Stop_Click"></Button>
         </StackPanel>
         <Border BorderThickness="2" BorderBrush="Black" Grid.Column="1">
-            <TextBlock Grid.Column="1" Margin="5" Name="LogTextBlock" TextWrapping="Wrap" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-            </TextBlock>
+            <ScrollViewer>
+                <TextBlock Grid.Column="1" Margin="5" Name="LogTextBlock" TextWrapping="Wrap" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                </TextBlock>
+            </ScrollViewer>
         </Border>
 
     </Grid>
