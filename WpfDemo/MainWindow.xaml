@@ -8,12 +8,21 @@
         Title="Demo" Height="450" Width="800">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="120"></ColumnDefinition>
+            <ColumnDefinition Width="200"></ColumnDefinition>
             <ColumnDefinition></ColumnDefinition>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Column="0" Background="AliceBlue">
             <Button Content="Start" Name="Start" Margin="5" Click="Start_Click"></Button>
             <Button Content="Stop" Name="Stop" Margin="5" Click="Stop_Click"></Button>
+            <Label Content="Port:" Margin="5,5,5,0"/>
+            <TextBox Text="8080" Name="Port" Margin="20,0,5,5"/>
+            <Label Content="Prefixes:" Margin="5,5,5,0"/>
+            <TextBox Text="" Name="Prefixes"  Margin="20,0,5,5" Height="67" TextWrapping="Wrap" AcceptsReturn="True"
+  VerticalScrollBarVisibility="Auto"/>
+            <Label Content="Users:" Margin="5,5,5,0"/>
+            <TextBox Text="" Name="Users"  Margin="20,0,5,5" Height="67" TextWrapping="Wrap" AcceptsReturn="True"
+  VerticalScrollBarVisibility="Auto"/>
+
         </StackPanel>
         <Border BorderThickness="2" BorderBrush="Black" Grid.Column="1">
             <ScrollViewer>

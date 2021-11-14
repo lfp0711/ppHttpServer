@@ -13,12 +13,9 @@ namespace ppHttpServer
     {
         private const int DEFAULT_PORT = 8080;
 
-        private int _port = 0;
-        private String[] _paths = new string[] { };
-        private Dictionary<String, String> _users = new Dictionary<string, string>();
-
-        private volatile bool _keepGoing = true;
-        private Task _handleTask;
+        private int _port;
+        private String[] _pathPrefixes = new String[] { };
+        private Dictionary<String, String> _users = new Dictionary<String, String>();
 
         private Func<HttpListenerRequest, HttpListenerResponse, String, byte[]> _handleRequest;
 
@@ -28,24 +25,26 @@ namespace ppHttpServer
 
         public Func<HttpListenerRequest, HttpListenerResponse, string, byte[]> HandleRequest { get => _handleRequest; set => _handleRequest = value; }
         public Action<string> Logger { get => _logger; set => _logger = value; }
+        public int Port { get => _port; set { if (_port != value) { _port = value; handlePrefixes(); } } }
+        public string[] PathPrefixes { get => _pathPrefixes; set { _pathPrefixes = value; if (_pathPrefixes == null) _pathPrefixes = new String[] { }; handlePrefixes(); } }
 
-        public HttpServer() : this(DEFAULT_PORT) { }
+        public Dictionary<string, string> Users { get => _users; set { _users = value; if (_users == null) _users = new Dictionary<String, String>();  handleAuth(); } }
 
-        public HttpServer(int port) : this(port, null) { }
+        public HttpServer() : this(DEFAULT_PORT, null, null) { }
+
+        public HttpServer(int port) : this(port, new String[] { }, null) { }
 
         public HttpServer(int port, String[] paths) : this(port, paths, null) { }
+        public HttpServer(int port, Dictionary<String, String> users) : this(port, null, users) { }
 
-        public HttpServer(int port, String[] paths, Dictionary<String, String> users)
+        public HttpServer(int port, String[] pathPrefixes, Dictionary<String, String> users)
         {
-            this._port = port;
-            if (paths != null)
-                this._paths = paths;
-            if (users != null)
-                this._users = users;
+            this.Port = port;
+            this.PathPrefixes = pathPrefixes;
+            this.Users = users;
 
             Init();
         }
-
 
 
         private void Init()
@@ -53,36 +52,8 @@ namespace ppHttpServer
             _log("Init Begin");
             _listener = new HttpListener();
 
-            List<string> prefixList = new List<string>();
-
-            if (_paths.Length == 0)
-            {
-                prefixList.Add(string.Format("http://*:{0}/", _port));
-            }
-            else
-            {
-                for (int i = 0; i < _paths.Length; i++)
-                {
-                    var path = _paths[i];
-                    if (path.StartsWith("/"))
-                    {
-                        path = path.Substring(1);
-                    }
-                    if (!path.EndsWith("/"))
-                    {
-                        path = path + "/";
-                    }
-                    prefixList.Add(string.Format("http://*:{0}/{1}", _port, path));
-                }
-            }
-            prefixList.ForEach(delegate (string prefix)
-            {
-                _log(prefix);
-                _listener.Prefixes.Add(prefix);
-            });
-
-            if (_users.Count > 0)
-                _listener.AuthenticationSchemes = AuthenticationSchemes.Basic;
+            handlePrefixes();
+            handleAuth();
 
             _handleRequest = demoHandleRequest;
             _logger = log2Debug;
@@ -90,9 +61,60 @@ namespace ppHttpServer
             _log("Init End");
         }
 
+        private void handlePrefixes()
+        {
+            _log("Handle Prefixes");
+            if (_listener != null)
+            {
+                List<string> prefixList = new List<string>();
+                if (PathPrefixes.Length == 0)
+                {
+                    prefixList.Add(string.Format("http://*:{0}/", Port));
+                }
+                else
+                {
+                    for (int i = 0; i < PathPrefixes.Length; i++)
+                    {
+                        var _pathPrefix = PathPrefixes[i];
+                        if(!String.IsNullOrEmpty(_pathPrefix.Trim()))
+                        {
+                            if (_pathPrefix.StartsWith("/"))
+                            {
+                                _pathPrefix = _pathPrefix.Substring(1);
+                            }
+                            if (!_pathPrefix.EndsWith("/"))
+                            {
+                                _pathPrefix = _pathPrefix + "/";
+                            }
+                            prefixList.Add(string.Format("http://*:{0}/{1}", Port, _pathPrefix));
+                        }
+                    }
+                }
+
+                _listener.Prefixes.Clear();
+                prefixList.ForEach(delegate (string prefix)
+                {
+                    _log("prefix: " + prefix);
+                    _listener.Prefixes.Add(prefix);
+                });
+            }
+        }
+        private void handleAuth()
+        {
+            _log("Handle Auth");
+            if (_listener != null)
+            {
+                if (Users.Count > 0)
+                    _listener.AuthenticationSchemes = AuthenticationSchemes.Basic;
+                else
+                    _listener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
+            }
+        }
+
         public void Start()
         {
             _log("Start HttpServer");
+
             _listener.Start();
             BeginGetContext();
         }
@@ -178,7 +200,7 @@ namespace ppHttpServer
                     {
                         HttpListenerBasicIdentity identity = (HttpListenerBasicIdentity)context.User.Identity;
 
-                        if (_users.ContainsKey(identity.Name) && _users[identity.Name].Equals(identity.Password))
+                        if (Users.ContainsKey(identity.Name) && Users[identity.Name].Equals(identity.Password))
                             return identity.Name;
                     }
                 }

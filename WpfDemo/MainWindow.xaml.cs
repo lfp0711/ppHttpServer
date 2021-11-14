@@ -1,6 +1,7 @@
 ﻿using ppHttpServer;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -24,20 +25,22 @@ namespace WpfDemo
     /// </summary>
     public partial class MainWindow : Window
     {
-
-        Dictionary<String, String> _users = new Dictionary<string, string>();
         HttpServer httpServer = null;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            _users.Add("bit", "123456");
+            Prefixes.AppendText("/hello" + Environment.NewLine);
 
-            httpServer = new HttpServer(8080, new string[] { "hello" }, _users);
+            Users.AppendText("tom/123456" + Environment.NewLine);
+            Users.AppendText("jack/123456" + Environment.NewLine);
 
-            httpServer.Logger = log2Text;
-            httpServer.HandleRequest = myHandleRequest;
+            httpServer = new HttpServer(8080)
+            {
+                Logger = log2Text,
+                HandleRequest = myHandleRequest
+            };
 
             Start.IsEnabled = true;
             Stop.IsEnabled = false;
@@ -48,12 +51,37 @@ namespace WpfDemo
             log2Text("Start_Click");
             if (httpServer != null)
             {
+                int port = int.Parse(Port.Text);
+                List<String> prefixList = new List<String>();
+                foreach (String line in Prefixes.Text.Split(Environment.NewLine))
+                {
+                    Debug.Print(line);
+                    if (!String.IsNullOrEmpty(line))
+                        prefixList.Add(line);
+                }
+                String[] pathPrefixes = prefixList.ToArray();
+
+                Dictionary<String, String> userMap = new Dictionary<String, String>();
+                foreach(String line in Users.Text.Split(Environment.NewLine))
+                {
+                    Debug.Print(line);
+                    String[] strs = line.Split("/");
+                    if(strs.Length == 2)
+                    {
+                        if(strs[0].Length > 0 && strs[1].Length > 0)
+                            userMap.Add(strs[0], strs[1]);
+                    }
+                }
+
+                httpServer.Port = port;
+                httpServer.PathPrefixes = pathPrefixes;
+                httpServer.Users = userMap;
+
                 httpServer.Start();
 
                 Start.IsEnabled = false;
                 Stop.IsEnabled = true;
             }
-
         }
 
         private void Stop_Click(object sender, RoutedEventArgs e)
