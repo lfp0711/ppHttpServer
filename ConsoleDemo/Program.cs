@@ -13,7 +13,7 @@ namespace ppHttpServer
         {
 
             Dictionary<String, String> _users = new Dictionary<string, string>();
-            _users.Add("bit", "123456");
+            _users.Add("tom", "123456");
             HttpServer httpServer = new HttpServer(8080, new string[] { "hello" }, _users);
 
             httpServer.Logger = log2Console;
@@ -36,6 +36,9 @@ namespace ppHttpServer
                 else if (input.Equals("stop", StringComparison.OrdinalIgnoreCase))
                 {
                     httpServer.Stop();
+                } else
+                {
+                    Console.WriteLine("Unknown Command!");
                 }
             }
 

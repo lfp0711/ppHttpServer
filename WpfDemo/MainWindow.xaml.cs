@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Mime;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -107,6 +108,8 @@ namespace WpfDemo
 
             if (path == "/hello")
             {
+                Thread.Sleep(1 * 1000);
+
                 Encoding encoding = request.ContentEncoding;
                 Stream input = request.InputStream;
                 StreamReader reader = new StreamReader(input, encoding);
@@ -138,9 +141,9 @@ namespace WpfDemo
 
         private void log2Text(string? message)
         {
-            LogTextBlock.Dispatcher.BeginInvoke(new Action(() =>
+            LogTextBox.Dispatcher.BeginInvoke(new Action(() =>
             {
-                LogTextBlock.Text += DateTime.UtcNow + " " + message + Environment.NewLine;
+                LogTextBox.Text += DateTime.UtcNow + " " + message + Environment.NewLine;
             }));
         }
     }

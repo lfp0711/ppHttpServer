@@ -24,10 +24,10 @@
   VerticalScrollBarVisibility="Auto"/>
 
         </StackPanel>
-        <Border BorderThickness="2" BorderBrush="Black" Grid.Column="1">
+        <Border BorderThickness="1" BorderBrush="Blue"  Grid.Column="1">
             <ScrollViewer>
-                <TextBlock Grid.Column="1" Margin="5" Name="LogTextBlock" TextWrapping="Wrap" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                </TextBlock>
+                <TextBox  Grid.Column="1" Margin="5" Name="LogTextBox" TextWrapping="Wrap" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" IsReadOnly="True">
+                </TextBox>
             </ScrollViewer>
         </Border>
 

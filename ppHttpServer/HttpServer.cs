@@ -139,16 +139,31 @@ namespace ppHttpServer
             try
             {
                 context = _listener.EndGetContext(asyncResult);
-
-                OnRequest(context);
             }
-            catch
+            catch (Exception e)
             {
-                //_log("" + e);
+                _log("exception: " + e.Message);
             }
             finally
             {
-                BeginGetContext();
+                try
+                {
+                    BeginGetContext();
+                }
+                catch (Exception e)
+                {
+                    _log("exception: " + e.Message);
+                }
+            }
+
+            try
+            {
+                if(context != null)
+                    OnRequest(context);
+            }
+            catch(Exception e)
+            {
+                _log("exception: " + e.Message);
             }
 
         }
@@ -168,6 +183,7 @@ namespace ppHttpServer
 
             if (_listener.AuthenticationSchemes == AuthenticationSchemes.Basic && authUser == null)
             {
+                _log("Unauthorized");
                 response.StatusCode = ((int)HttpStatusCode.Unauthorized);
             }
             else

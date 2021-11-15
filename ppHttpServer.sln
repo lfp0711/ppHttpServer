@@ -13,7 +13,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfDemo", "WpfDemo\WpfDemo.csproj", "{5733C852-9E96-4D4D-B697-8E97A8251282}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WpfDemo", "WpfDemo\WpfDemo.csproj", "{5733C852-9E96-4D4D-B697-8E97A8251282}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleClient", "ConsoleClient\ConsoleClient.csproj", "{5013AB4E-556F-444C-8A53-94D87F64E025}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{5733C852-9E96-4D4D-B697-8E97A8251282}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5733C852-9E96-4D4D-B697-8E97A8251282}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5733C852-9E96-4D4D-B697-8E97A8251282}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5013AB4E-556F-444C-8A53-94D87F64E025}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5013AB4E-556F-444C-8A53-94D87F64E025}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5013AB4E-556F-444C-8A53-94D87F64E025}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5013AB4E-556F-444C-8A53-94D87F64E025}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
