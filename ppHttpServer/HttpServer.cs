@@ -5,7 +5,6 @@ using System.IO;
 using System.Net;
 using System.Net.Mime;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace ppHttpServer
 {
@@ -14,8 +13,8 @@ namespace ppHttpServer
         private const int DEFAULT_PORT = 8080;
 
         private int _port;
-        private String[] _pathPrefixes = new String[] { };
-        private Dictionary<String, String> _users = new Dictionary<String, String>();
+        private String[] _pathPrefixes = Array.Empty<string>();
+        private Dictionary<String, String> _users = new();
 
         private Func<HttpListenerRequest, HttpListenerResponse, String, byte[]> _handleRequest;
 
@@ -26,9 +25,9 @@ namespace ppHttpServer
         public Func<HttpListenerRequest, HttpListenerResponse, string, byte[]> HandleRequest { get => _handleRequest; set => _handleRequest = value; }
         public Action<string> Logger { get => _logger; set => _logger = value; }
         public int Port { get => _port; set { if (_port != value) { _port = value; handlePrefixes(); } } }
-        public string[] PathPrefixes { get => _pathPrefixes; set { _pathPrefixes = value; if (_pathPrefixes == null) _pathPrefixes = new String[] { }; handlePrefixes(); } }
+        public string[] PathPrefixes { get => _pathPrefixes; set { _pathPrefixes = value; if (_pathPrefixes == null) _pathPrefixes = Array.Empty<string>(); handlePrefixes(); } }
 
-        public Dictionary<string, string> Users { get => _users; set { _users = value; if (_users == null) _users = new Dictionary<String, String>();  handleAuth(); } }
+        public Dictionary<string, string> Users { get => _users; set { _users = value; if (_users == null) _users = new(); handleAuth(); } }
 
         public HttpServer() : this(DEFAULT_PORT, null, null) { }
 
@@ -76,7 +75,7 @@ namespace ppHttpServer
                     for (int i = 0; i < PathPrefixes.Length; i++)
                     {
                         var _pathPrefix = PathPrefixes[i];
-                        if(!String.IsNullOrEmpty(_pathPrefix.Trim()))
+                        if (!String.IsNullOrEmpty(_pathPrefix.Trim()))
                         {
                             if (_pathPrefix.StartsWith("/"))
                             {
@@ -158,10 +157,10 @@ namespace ppHttpServer
 
             try
             {
-                if(context != null)
+                if (context != null)
                     OnRequest(context);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 _log("exception: " + e.Message);
             }
@@ -184,7 +183,7 @@ namespace ppHttpServer
             if (_listener.AuthenticationSchemes == AuthenticationSchemes.Basic && authUser == null)
             {
                 _log("Unauthorized");
-                response.StatusCode = ((int)HttpStatusCode.Unauthorized);
+                response.StatusCode = (int)HttpStatusCode.Unauthorized;
             }
             else
             {
@@ -193,7 +192,6 @@ namespace ppHttpServer
                     byte[] buffer = HandleRequest(request, response, authUser);
                     if (buffer != null)
                     {
-                        // Get a response stream and write the response to it.
                         response.ContentLength64 = buffer.Length;
                         Stream output = response.OutputStream;
                         output.Write(buffer, 0, buffer.Length);

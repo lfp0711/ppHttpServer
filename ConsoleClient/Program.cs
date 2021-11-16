@@ -37,7 +37,7 @@ namespace ConsoleClient
 
                 Console.WriteLine(Thread.CurrentThread.ManagedThreadId + " - " + i + ": " + responseBody);
             }
-            Console.WriteLine(Thread.CurrentThread.ManagedThreadId +  ", Time: " + (DateTime.Now.Subtract(startTime)));
+            Console.WriteLine(Thread.CurrentThread.ManagedThreadId + ", Time: " + (DateTime.Now.Subtract(startTime)));
         }
     }
 }

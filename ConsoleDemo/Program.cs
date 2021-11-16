@@ -27,7 +27,7 @@ namespace ppHttpServer
                 var input = Console.ReadLine();
                 if (input.Equals("exit", StringComparison.OrdinalIgnoreCase))
                 {
-                   break;
+                    break;
                 }
                 else if (input.Equals("start", StringComparison.OrdinalIgnoreCase))
                 {
@@ -36,7 +36,8 @@ namespace ppHttpServer
                 else if (input.Equals("stop", StringComparison.OrdinalIgnoreCase))
                 {
                     httpServer.Stop();
-                } else
+                }
+                else
                 {
                     Console.WriteLine("Unknown Command!");
                 }

@@ -3,21 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Mime;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace WpfDemo
 {
@@ -63,13 +53,13 @@ namespace WpfDemo
                 String[] pathPrefixes = prefixList.ToArray();
 
                 Dictionary<String, String> userMap = new Dictionary<String, String>();
-                foreach(String line in Users.Text.Split(Environment.NewLine))
+                foreach (String line in Users.Text.Split(Environment.NewLine))
                 {
                     Debug.Print(line);
                     String[] strs = line.Split("/");
-                    if(strs.Length == 2)
+                    if (strs.Length == 2)
                     {
-                        if(strs[0].Length > 0 && strs[1].Length > 0)
+                        if (strs[0].Length > 0 && strs[1].Length > 0)
                             userMap.Add(strs[0], strs[1]);
                     }
                 }
