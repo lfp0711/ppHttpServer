@@ -55,7 +55,7 @@ namespace ppHttpServer
             handleAuth();
 
             _handleRequest = demoHandleRequest;
-            _logger = log2Debug;
+            _logger = Log2Debug;
 
             _log("Init End");
         }
@@ -141,7 +141,7 @@ namespace ppHttpServer
             }
             catch (Exception e)
             {
-                _log("exception: " + e.Message);
+                _log("GetContextCallback exception1: " + e.Message);
             }
             finally
             {
@@ -151,7 +151,7 @@ namespace ppHttpServer
                 }
                 catch (Exception e)
                 {
-                    _log("exception: " + e.Message);
+                    _log("GetContextCallback exception2: " + e.Message);
                 }
             }
 
@@ -162,7 +162,7 @@ namespace ppHttpServer
             }
             catch (Exception e)
             {
-                _log("exception: " + e.Message);
+                _log("GetContextCallback exception3: " + e.Message);
             }
 
         }
@@ -219,9 +219,9 @@ namespace ppHttpServer
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                _log("" + ex);
+                _log("auth exception: " + e.Message);
             }
 
             return null;
@@ -261,7 +261,7 @@ namespace ppHttpServer
             return buffer;
         }
 
-        private void log2Debug(string? message)
+        private void Log2Debug(string? message)
         {
             Debug.Print(DateTime.UtcNow + " " + message);
         }
